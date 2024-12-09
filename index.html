@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code Scanner</title>
+    <!-- Tải thư viện html5-qrcode từ CDN -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.7/html5-qrcode.min.js"
+      integrity="sha512-dH3HFLqbLJ4o/3CFGVkn1lrppE300cfrUiD2vzggDAtJKiCClLKjJEa7wBcx7Czu04Xzgf3jMRvSwjVTYtzxEA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <h2>QR Code Scanner</h2>
+
+    <!-- Hiển thị camera quét mã QR -->
+    <div id="qr-reader" style="width: 500px; height: 500px"></div>
+
+    <!-- Nơi hiển thị giá trị quét được -->
+    <div id="qr-result">
+      <p>QR Code Result: <span id="result-text">Chưa quét mã QR nào</span></p>
+    </div>
+
+    <button id="stop-scanning">Stop Scanning</button>
+
+    <script>
+      // Hàm quét QR Code thành công
+      function onScanSuccess(decodedText, decodedResult) {
+        console.log(`QR Code detected: ${decodedText}`);
+
+        // Hiển thị kết quả lên giao diện
+        document.getElementById("result-text").innerHTML = decodedText;
+
+        // Gửi dữ liệu lên server
+        fetch("http://192.168.1.172:8080", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ Value: decodedText }),
+          mode: "no-cors",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Server response:", data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      // Tạo đối tượng scanner quét mã QR
+      const qrCodeReader = new Html5QrcodeScanner("qr-reader", {
+        fps: 10, // Tần suất quét mã QR
+        qrbox: 250, // Kích thước khung quét
+        aspectRatio: 1.0, // Tỉ lệ của khung quét
+        disableFlip: false, // Cho phép lật camera
+      });
+
+      // Bắt đầu quét mã QR
+      qrCodeReader.render(onScanSuccess);
+
+      // Dừng quét khi nhấn nút "Stop Scanning"
+      document
+        .getElementById("stop-scanning")
+        .addEventListener("click", function () {
+          qrCodeReader.clear(); // Dừng quét
+        });
+    </script>
+  </body>
+</html>
